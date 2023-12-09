@@ -1,6 +1,6 @@
 from PySide6.QtCore import QThread, Signal, QPoint
 from enum import Enum
-from core.board import Board
+from core.board import *
 
 
 class GameMode(Enum):
@@ -10,16 +10,15 @@ class GameMode(Enum):
 
 
 class GameplayThread(QThread):
-    move_piece_signal = Signal(int, int)
+    player_moved_signal = Signal()
 
     def init_game(self, game_mode: GameMode, player_names, start_player=0):
         self.game_mode = game_mode
         self.player_names = player_names
         self.start_player = start_player
         self.cur_player = 0
-        self.piece_selected = False  # player has to select the piece first to move it
-        self.selected_piece = 0
-        self.cur_player_finished = False
+        self.selected_piece = 0  # the piece the current player selected
+        self.cur_player_finished = False  # whether the current player has finished the move
         self.board = Board()
         self.board.init_board(self.start_player)
 
@@ -29,27 +28,33 @@ class GameplayThread(QThread):
                 self.cur_player_finished = False
                 while not self.cur_player_finished:
                     self.msleep(10)
-                    # self.move_piece_signal.emit(0, 0)
-                    # self.msleep(1000)  # Simulate some work
             else:
                 pass
 
     def handle_user_input(self, coord: QPoint):
         x, y = coord.x(), coord.y()
-        piece_idx = self.board.cur_state[x, y]
-        print(f"GameplayThread: user {self.player_names[self.cur_player]} input coord {coord}, piece_idx: {piece_idx}")
-        self.cur_player = 1 - self.cur_player  # switch the player
-        self.cur_player_finished = True
+        piece_id = self.board.cur_state[x, y]
 
-        # # select the piece
-        # if piece_idx != 0 and (piece_idx > 0) == (self.cur_player == 0):  # check it's a valid piece
-        #     self.piece_selected = piece_idx
-        #     self.piece_selected = True
-
-        # else:
-        #     # move the piece to the new coord
-        #     if piece_idx == 0:  # check it's a new coord
-        #         self.piece_selected = False
-        #         self.cur_player = 1 - self.cur_player  # switch the player
-        #         self.cur_player_finished = True
-
+        # first input: piece
+        if self.selected_piece == 0:
+            # player selected his own piece
+            if piece_id != 0 and piece_id_to_owner[piece_id - 1] == self.cur_player:
+                self.selected_piece = piece_id
+                print(f"GameplayThread: user {self.player_names[self.cur_player]} selected piece_id: {self.selected_piece}")
+        # second input: coord
+        else:
+            # player selected his own piece
+            if piece_id != 0 and piece_id_to_owner[piece_id - 1] == self.cur_player:
+                # change selected piece
+                self.selected_piece = piece_id
+                print(f"GameplayThread: user {self.player_names[self.cur_player]} changed to piece_id: {self.selected_piece}")
+            # player select a coord, check valid move
+            elif self.board.check_move_valid(self.selected_piece, coord):
+                # make the move
+                print(f"GameplayThread: user {self.player_names[self.cur_player]} moved piece_id: {self.selected_piece} to {coord}")
+                self.board.move_piece(self.selected_piece, coord)
+                self.player_moved_signal.emit()
+                self.cur_player = 1 - self.cur_player  # switch the player
+                # reset variables
+                self.cur_player_finished = True
+                self.selected_piece = 0

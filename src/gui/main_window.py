@@ -30,19 +30,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.game_ui)
         
         # init the gameplay thread
-        self.gameplay_thread.move_piece_signal.connect(self.update_gui)
+        self.gameplay_thread.player_moved_signal.connect(self.update_board_ui)
         self.gameplay_thread.init_game(GameMode.SELF_PLAY, ["player1", "player2"], 0)
         
         # init game UI
         self.game_ui.game_board_click_signal.connect(self.gameplay_thread.handle_user_input)
-        self.game_ui.render_board(self.gameplay_thread.board.cur_state)
+        self.update_board_ui()
 
         # start game loop
         self.gameplay_thread.start()
 
-    def update_gui(self, value):
-        # print(f"Updating GUI with value: {value}")
-        pass
+    def update_board_ui(self):
+        self.game_ui.render_board(self.gameplay_thread.board.cur_state)
 
     def closeEvent(self, event):
         self.gameplay_thread.terminate()

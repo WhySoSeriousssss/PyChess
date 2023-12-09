@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import QPoint, Signal
 from utils.image_process import paste
-from utils.math import bound
 from gui.board_label import BoardLabel
+from core.board import *
 
 
 piece_assets_path = "assets/pieces/"
@@ -55,11 +55,11 @@ class GameUI(QWidget):
         board_img = self.empty_board_img.copy()
 
         for coord in list(zip(pieces_coords[0], pieces_coords[1])):
-            piece_idx = board_state[coord]
-            if piece_idx > 0:  # red pieces
-                piece_img = self.red_piece_imgs[piece_idx - 1]
+            piece_id = board_state[coord]
+            if piece_id_to_owner[piece_id - 1]  == 0:  # red pieces
+                piece_img = self.red_piece_imgs[piece_id_to_type[piece_id - 1] - 1]
             else:  # black pieces
-                piece_img = self.black_piece_imgs[-piece_idx - 1]
+                piece_img = self.black_piece_imgs[piece_id_to_type[piece_id - 1] - 1]
         
             paste(board_img, piece_img, (self.board_offset[0]+coord[0]*self.board_spacing[0]-self.piece_size[0]//2, 
                                          self.board_offset[1]+coord[1]*self.board_spacing[1]-self.piece_size[1]//2))
