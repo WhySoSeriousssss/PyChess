@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 from PySide6.QtCore import Signal
 
 
-class MenuWidget(QWidget):
+class MenuUI(QWidget):
 
     # signals
     self_play_signal = Signal()
