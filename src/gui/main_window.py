@@ -34,6 +34,7 @@ class MainWindow(QMainWindow):
         self.gameplay_thread.init_game(GameMode.SELF_PLAY, ["player1", "player2"], 0)
         
         # init game UI
+        self.game_ui.game_board_click_signal.connect(self.gameplay_thread.handle_user_input)
         self.game_ui.render_board(self.gameplay_thread.board.cur_state)
 
         # start game loop
