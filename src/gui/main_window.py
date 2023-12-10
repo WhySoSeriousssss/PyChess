@@ -36,7 +36,11 @@ class MainWindow(QMainWindow):
         # init game UI
         self.game_ui.game_board_click_signal.connect(self.gameplay_thread.handle_user_input)
         self.update_board_ui()
-
+        # from PySide6.QtCore import QTimer
+        # timer = QTimer(self)
+        # timer.timeout.connect(self.update_board_ui)
+        # timer.start(1000)
+        
         # start game loop
         self.gameplay_thread.start()
 

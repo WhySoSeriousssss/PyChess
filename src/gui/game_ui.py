@@ -48,6 +48,11 @@ class GameUI(QWidget):
         """
         Render the board given the state
         """
+        import time
+        from PySide6.QtCore import QThread
+
+        print(QThread.currentThread)
+        t1 = time.time()
         # Get the coordinates of non-zero elements
         pieces_coords = np.nonzero(board_state)
 
@@ -63,6 +68,7 @@ class GameUI(QWidget):
         
             paste(board_img, piece_img, (self.board_offset[0]+coord[0]*self.board_spacing[0]-self.piece_size[0]//2, 
                                          self.board_offset[1]+coord[1]*self.board_spacing[1]-self.piece_size[1]//2))
+        t2 = time.time()
 
         # convert to QImage
         board_img = np.ascontiguousarray(board_img[:, :, :3])
@@ -72,6 +78,7 @@ class GameUI(QWidget):
         qimage = QImage(board_img.data, width, height, bytes_per_line, QImage.Format_RGB888)
          # render the board label
         self.lbl_game_board.setPixmap(QPixmap.fromImage(qimage))
+        print("render took", time.time() - t1, t2 - t1)
 
     def handle_board_label_clicked(self, pos: QPoint):
         """
