@@ -53,13 +53,13 @@ class GameUI(QWidget):
 
         print(QThread.currentThread)
         t1 = time.time()
-        # Get the coordinates of non-zero elements
-        pieces_coords = np.nonzero(board_state)
-
+        
         # overlay each piece's image onto the board image
         board_img = self.empty_board_img.copy()
 
-        for coord in list(zip(pieces_coords[0], pieces_coords[1])):
+        # Get the coordinates of non-zero elements
+        pieces_coords = np.transpose(np.nonzero(self.cur_state)).tolist()
+        for coord in pieces_coords:
             piece_id = board_state[coord]
             if piece_id_to_owner[piece_id - 1]  == 0:  # red pieces
                 piece_img = self.red_piece_imgs[piece_id_to_type[piece_id - 1] - 1]
