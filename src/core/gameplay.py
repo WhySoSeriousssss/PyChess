@@ -49,7 +49,7 @@ class GameplayThread(QThread):
                 self.selected_piece = piece_id
                 print(f"GameplayThread: user {self.player_names[self.cur_player]} changed to piece_id: {self.selected_piece}")
             # player select a coord, check valid move
-            elif self.board.check_move_valid(self.selected_piece, coord):
+            elif self.board.check_move_validity(self.selected_piece, coord):
                 # make the move
                 print(f"GameplayThread: user {self.player_names[self.cur_player]} moved piece_id: {self.selected_piece} to {coord}")
                 self.board.move_piece(self.selected_piece, coord)

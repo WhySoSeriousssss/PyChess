@@ -1,5 +1,9 @@
 import numpy as np
 from enum import Enum
+from PySide6.QtCore import QPoint
+from collections import defaultdict
+from utils.math import bound
+
 
 class Piece(Enum):
     SOLDIER     = 1  # 兵/卒
@@ -21,20 +25,9 @@ class Board:
         self.height = 10
         self.width = 9
         self.cur_state = np.zeros((self.height, self.width), dtype=int)
+        self.availables = defaultdict(list)
 
     def init_board(self, start_player):
-        # self.cur_state = np.array([
-        #     [-3, -4, -5, -6, -7, -6, -5, -4, -3],
-        #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #     [0, -2, 0, 0, 0, 0, 0, -2, 0],
-        #     [-1, 0, -1, 0, -1, 0, -1, 0, -1],
-        #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #     [1, 0, 1, 0, 1, 0, 1, 0, 1],
-        #     [0, 2, 0, 0, 0, 0, 0, 2, 0],
-        #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #     [3, 4, 5, 6, 7, 6, 5, 4, 3]
-        # ])
         self.cur_state = np.array([
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -49,12 +42,66 @@ class Board:
         ])
         self.cur_player = start_player
         self.start_player = start_player
+        self.update_availables()
 
-    def check_move_valid(self, piece_idx, coord):
-        return True
+    def update_availables(self):
+        self.availables.clear()
+        # Get the coordinates of non-zero elements
+        pieces_coords = np.transpose(np.nonzero(self.cur_state)).tolist()
+        for coord in pieces_coords:
+            piece_id = self.cur_state[tuple(coord)]
+            piece_type = piece_id_to_type[piece_id - 1]
+            piece_owner = piece_id_to_owner[piece_id - 1]
 
-    def move_piece(self, piece_idx, coord):
-        pass
+            if piece_type == Piece.SOLDIER.value:
+                if piece_owner == 0:
+                    if coord[1] in [5, 6]:
+                        new_coords = [
+                            QPoint(bound(coord[0] - 1, 0, self.height - 1), coord[1]),  # forward
+                        ]
+                    else:
+                        new_coords = [
+                            QPoint(bound(coord[0] - 1, 0, self.height - 1), coord[1]),  # forward
+                            QPoint(coord[0], bound(coord[1] - 1, 0, self.width - 1)),  # left
+                            QPoint(coord[0], bound(coord[1] + 1, 0, self.width - 1))  # right
+                        ]
+                else:
+                    pass
+            elif piece_type == Piece.CANNON.value:
+                pass
+            elif piece_type == Piece.CHARIOT.value:
+                pass
+            elif piece_type == Piece.HORSE.value:
+                pass
+            elif piece_type == Piece.ELEPHANT.value:
+                if piece_owner == 0:
+                    pass
+                else:
+                    pass
+            elif piece_type == Piece.ADVISOR.value:
+                if piece_owner == 0:
+                    pass
+                else:
+                    pass
+            elif piece_type == Piece.GENERAL.value:
+                if piece_owner == 0:
+                    pass
+                else:
+                    pass
+
+    def check_move_validity(self, piece_id, coord):
+        valid = piece_id in self.availables.keys() \
+            and self.coord_to_idx(coord) in self.availables[piece_id]
+        return valid
+
+    def move_piece(self, piece_id, coord: QPoint):
+        self.cur_state[np.where(self.cur_state == piece_id)] = 0
+        self.cur_state[coord.x(), coord.y()] = piece_id
+        self.update_availables()
 
     def game_finished(self):
         return False, -1
+
+    def coord_to_idx(self, coord: QPoint):
+        return coord.x() * self.width + coord.y()
+    
