@@ -89,7 +89,7 @@ class Board:
                 else:
                     pass
 
-    def update_availables(self, piece_id, coord):
+    def check_move_validity(self, piece_id, coord):
         valid = piece_id in self.availables.keys() \
             and self.coord_to_idx(coord) in self.availables[piece_id]
         return valid
