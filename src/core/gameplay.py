@@ -1,4 +1,4 @@
-from PySide6.QtCore import QThread, Signal, QPoint
+from PySide6.QtCore import QThread, Signal
 from enum import Enum
 from core.board import *
 
@@ -10,7 +10,7 @@ class GameMode(Enum):
 
 
 class GameplayThread(QThread):
-    player_moved_signal = Signal()
+    player_moved_signal = Signal(int, tuple)  # piece_id, coord
 
     def init_game(self, game_mode: GameMode, player_names, start_player=0):
         self.game_mode = game_mode
@@ -28,32 +28,32 @@ class GameplayThread(QThread):
                 self.cur_player_finished = False
                 while not self.cur_player_finished:
                     self.msleep(10)
+                    # continue
             else:
                 pass
 
-    def handle_user_input(self, coord: QPoint):
-        x, y = coord.x(), coord.y()
-        piece_id = self.board.cur_state[x, y]
+    def handle_user_input(self, coord):
+        piece_id = self.board.cur_state[coord]
 
         # first input: piece
         if self.selected_piece == 0:
             # player selected his own piece
             if piece_id != 0 and piece_id_to_owner[piece_id - 1] == self.cur_player:
                 self.selected_piece = piece_id
-                print(f"GameplayThread: user {self.player_names[self.cur_player]} selected piece_id: {self.selected_piece}")
+                print(f"GameplayThread: user {self.player_names[self.cur_player]} selected piece_id:{self.selected_piece}. availables:{self.board.availables[self.selected_piece]}")
         # second input: coord
         else:
             # player selected his own piece
             if piece_id != 0 and piece_id_to_owner[piece_id - 1] == self.cur_player:
                 # change selected piece
                 self.selected_piece = piece_id
-                print(f"GameplayThread: user {self.player_names[self.cur_player]} changed to piece_id: {self.selected_piece}")
+                print(f"GameplayThread: user {self.player_names[self.cur_player]} changed to piece_id:{self.selected_piece}. availables:{self.board.availables[self.selected_piece]}")
             # player select a coord, check valid move
             elif self.board.check_move_validity(self.selected_piece, coord):
                 # make the move
                 print(f"GameplayThread: user {self.player_names[self.cur_player]} moved piece_id: {self.selected_piece} to {coord}")
                 self.board.move_piece(self.selected_piece, coord)
-                self.player_moved_signal.emit()
+                self.player_moved_signal.emit(self.selected_piece, coord)
                 self.cur_player = 1 - self.cur_player  # switch the player
                 # reset variables
                 self.cur_player_finished = True

@@ -1,7 +1,9 @@
-from PySide6.QtWidgets import QMainWindow
-from gui.game_ui import GameUI
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
 from gui.menu_ui import MenuUI
+from gui.chess_board_scene import ChessboardScene
+from gui.chess_board_view import ChessboardView
 from core.gameplay import GameplayThread, GameMode
+import time
 
 
 class MainWindow(QMainWindow):
@@ -15,8 +17,14 @@ class MainWindow(QMainWindow):
         # menu widget
         self.menu_ui = MenuUI()
         self.menu_ui.self_play_signal.connect(self.init_game_self_play)
+        
         # game widget
-        self.game_ui = GameUI()
+        self.game_ui_widget = QWidget()
+        self.board_scene = ChessboardScene(902, 1002)
+        self.board_view = ChessboardView(self.board_scene)
+
+        layout = QVBoxLayout(self.game_ui_widget)
+        layout.addWidget(self.board_view)
 
         # game thread
         self.gameplay_thread = GameplayThread(self)
@@ -27,25 +35,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.menu_ui)
 
     def init_game_self_play(self):
-        self.setCentralWidget(self.game_ui)
+        self.setCentralWidget(self.game_ui_widget)
         
         # init the gameplay thread
-        self.gameplay_thread.player_moved_signal.connect(self.update_board_ui)
+        self.gameplay_thread.player_moved_signal.connect(self.board_scene.update_board_ui)
         self.gameplay_thread.init_game(GameMode.SELF_PLAY, ["player1", "player2"], 0)
-        
-        # init game UI
-        self.game_ui.game_board_click_signal.connect(self.gameplay_thread.handle_user_input)
-        self.update_board_ui()
-        # from PySide6.QtCore import QTimer
-        # timer = QTimer(self)
-        # timer.timeout.connect(self.update_board_ui)
-        # timer.start(1000)
+        self.board_scene.board_clicked_signal.connect(self.gameplay_thread.handle_user_input)
         
         # start game loop
         self.gameplay_thread.start()
-
-    def update_board_ui(self):
-        self.game_ui.render_board(self.gameplay_thread.board.cur_state)
 
     def closeEvent(self, event):
         self.gameplay_thread.terminate()

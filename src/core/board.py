@@ -1,6 +1,5 @@
 import numpy as np
 from enum import Enum
-from PySide6.QtCore import QPoint
 from collections import defaultdict
 from utils.math import bound
 
@@ -49,59 +48,212 @@ class Board:
         # Get the coordinates of non-zero elements
         pieces_coords = np.transpose(np.nonzero(self.cur_state)).tolist()
         for coord in pieces_coords:
+            new_coords = []
             piece_id = self.cur_state[tuple(coord)]
             piece_type = piece_id_to_type[piece_id - 1]
             piece_owner = piece_id_to_owner[piece_id - 1]
 
             if piece_type == Piece.SOLDIER.value:
-                if piece_owner == 0:
-                    if coord[1] in [5, 6]:
-                        new_coords = [
-                            QPoint(bound(coord[0] - 1, 0, self.height - 1), coord[1]),  # forward
+                if piece_owner == 0:  # red
+                    new_coords += [(bound(coord[0] - 1, 0, self.height - 1), coord[1])] # forward
+                    if coord[0] < 5:  # has crossed the river
+                        new_coords += [
+                            (coord[0], bound(coord[1] - 1, 0, self.width - 1)),  # left
+                            (coord[0], bound(coord[1] + 1, 0, self.width - 1))  # right
                         ]
-                    else:
-                        new_coords = [
-                            QPoint(bound(coord[0] - 1, 0, self.height - 1), coord[1]),  # forward
-                            QPoint(coord[0], bound(coord[1] - 1, 0, self.width - 1)),  # left
-                            QPoint(coord[0], bound(coord[1] + 1, 0, self.width - 1))  # right
+                else:  # black
+                    new_coords += [(bound(coord[0] + 1, 0, self.height - 1), coord[1])]  # forward
+                    if coord[0] > 4:  # has crossed the river
+                        new_coords += [
+                            (coord[0], bound(coord[1] - 1, 0, self.width - 1)),  # left
+                            (coord[0], bound(coord[1] + 1, 0, self.width - 1))  # right
                         ]
-                else:
-                    pass
+
             elif piece_type == Piece.CANNON.value:
-                pass
+                # left
+                attack_mode = False
+                for i in range(coord[1] - 1, -1, -1):
+                    if not attack_mode:
+                        if self.cur_state[coord[0], i] == 0:
+                            new_coords.append((coord[0], i))
+                        else:
+                            attack_mode = True
+                    else:
+                        if self.cur_state[coord[0], i] != 0:
+                            if piece_id_to_owner[self.cur_state[coord[0], i] - 1] != piece_owner:
+                                new_coords.append((coord[0], i))
+                            break
+                # right
+                attack_mode = False
+                for i in range(coord[1] + 1, 9, 1):
+                    if not attack_mode:
+                        if self.cur_state[coord[0], i] == 0:
+                            new_coords.append((coord[0], i))
+                        else:
+                            attack_mode = True
+                    else:
+                        if self.cur_state[coord[0], i] != 0:
+                            if piece_id_to_owner[self.cur_state[coord[0], i] - 1] != piece_owner:
+                                new_coords.append((coord[0], i))
+                            break
+                # up
+                attack_mode = False
+                for i in range(coord[0] - 1, -1, -1):
+                    if not attack_mode:
+                        if self.cur_state[i, coord[1]] == 0:
+                            new_coords.append((i, coord[1]))
+                        else:
+                            attack_mode = True
+                    else:
+                        if self.cur_state[i, coord[1]] != 0:
+                            if piece_id_to_owner[self.cur_state[i, coord[1]] - 1] != piece_owner:
+                                new_coords.append((i, coord[1]))
+                            break
+                # down
+                attack_mode = False
+                for i in range(coord[0] + 1, 10, 1):
+                    if not attack_mode:
+                        if self.cur_state[i, coord[1]] == 0:
+                            new_coords.append((i, coord[1]))
+                        else:
+                            attack_mode = True
+                    else:
+                        if self.cur_state[i, coord[1]] != 0:
+                            if piece_id_to_owner[self.cur_state[i, coord[1]] - 1] != piece_owner:
+                                new_coords.append((i, coord[1]))
+                            break
+
             elif piece_type == Piece.CHARIOT.value:
-                pass
+                # left
+                for i in range(coord[1] - 1, -1, -1):
+                    if self.cur_state[coord[0], i] == 0:
+                        new_coords.append((coord[0], i))
+                    else:
+                        if piece_id_to_owner[self.cur_state[coord[0], i] - 1] != piece_owner:
+                            new_coords.append((coord[0], i))
+                        break
+                # right
+                for i in range(coord[1] + 1, 9, 1):
+                    if self.cur_state[coord[0], i] == 0:
+                        new_coords.append((coord[0], i))
+                    else:
+                        if piece_id_to_owner[self.cur_state[coord[0], i] - 1] != piece_owner:
+                            new_coords.append((coord[0], i))
+                        break
+                # up
+                for i in range(coord[0] - 1, -1, -1):
+                    if self.cur_state[i, coord[1]] == 0:
+                        new_coords.append((i, coord[1]))
+                    else:
+                        if piece_id_to_owner[self.cur_state[i, coord[1]] - 1] != piece_owner:
+                            new_coords.append((i, coord[1]))
+                        break
+                # down
+                for i in range(coord[0] + 1, 10, 1):
+                    if self.cur_state[i, coord[1]] == 0:
+                        new_coords.append((i, coord[1]))
+                    else:
+                        if piece_id_to_owner[self.cur_state[i, coord[1]] - 1] != piece_owner:
+                            new_coords.append((i, coord[1]))
+                        break
+
             elif piece_type == Piece.HORSE.value:
-                pass
+                if coord[0] > 0 and coord[1] > 1 and self.cur_state[coord[0], coord[1] - 1] == 0:
+                    new_coords.append((coord[0] - 1, coord[1] - 2)) # up-left 1
+                if coord[0] > 1 and coord[1] > 0 and self.cur_state[coord[0] - 1, coord[1]] == 0:
+                    new_coords.append((coord[0] - 2, coord[1] - 1)) # up-left 2
+                if coord[0] > 0 and coord[1] < 7 and self.cur_state[coord[0], coord[1] + 1] == 0:
+                    new_coords.append((coord[0] - 1, coord[1] + 2)) # up-right 1
+                if coord[0] > 1 and coord[1] < 8 and self.cur_state[coord[0] - 1, coord[1]] == 0:
+                    new_coords.append((coord[0] - 2, coord[1] + 1)) # up-right 2
+                if coord[0] < 9 and coord[1] > 1 and self.cur_state[coord[0], coord[1] - 1] == 0:
+                    new_coords.append((coord[0] + 1, coord[1] - 2)) # down-left 1
+                if coord[0] < 8 and coord[1] > 0 and self.cur_state[coord[0] + 1, coord[1]] == 0:
+                    new_coords.append((coord[0] + 2, coord[1] - 1)) # down-left 2
+                if coord[0] < 9 and coord[1] < 7 and self.cur_state[coord[0], coord[1] + 1] == 0:
+                    new_coords.append((coord[0] + 1, coord[1] + 2)) # down-right 1
+                if coord[0] < 8 and coord[1] < 8 and self.cur_state[coord[0] + 1, coord[1]] == 0:
+                    new_coords.append((coord[0] + 2, coord[1] + 1)) # down-right 2
+
             elif piece_type == Piece.ELEPHANT.value:
                 if piece_owner == 0:
-                    pass
+                    if coord[0] > 6 and coord[1] > 0 and self.cur_state[coord[0] - 1, coord[1] - 1] == 0:
+                        new_coords.append((coord[0] - 2, coord[1] - 2))  # up-left
+                    if coord[0] > 6 and coord[1] < 8 and self.cur_state[coord[0] - 1, coord[1] + 1] == 0:
+                        new_coords.append((coord[0] - 2, coord[1] + 2))  # up-right
+                    if coord[0] < 8 and coord[1] > 0 and self.cur_state[coord[0] + 1, coord[1] - 1] == 0:
+                        new_coords.append((coord[0] + 2, coord[1] - 2))  # down-left
+                    if coord[0] < 8 and coord[1] < 8 and self.cur_state[coord[0] + 1, coord[1] + 1] == 0:
+                        new_coords.append((coord[0] + 2, coord[1] + 2))  # down-right
                 else:
-                    pass
+                    if coord[0] > 1 and coord[1] > 0 and self.cur_state[coord[0] - 1, coord[1] - 1] == 0:
+                        new_coords.append((coord[0] - 2, coord[1] - 2))  # up-left
+                    if coord[0] > 1 and coord[1] < 8 and self.cur_state[coord[0] - 1, coord[1] + 1] == 0:
+                        new_coords.append((coord[0] - 2, coord[1] + 2))  # up-right
+                    if coord[0] < 3 and coord[1] > 0 and self.cur_state[coord[0] + 1, coord[1] - 1] == 0:
+                        new_coords.append((coord[0] + 2, coord[1] - 2))  # down-left
+                    if coord[0] < 3 and coord[1] < 8 and self.cur_state[coord[0] + 1, coord[1] + 1] == 0:
+                        new_coords.append((coord[0] + 2, coord[1] + 2))  # down-right
+            
             elif piece_type == Piece.ADVISOR.value:
                 if piece_owner == 0:
-                    pass
+                    if coord[0] > 7 and coord[1] > 3:
+                        new_coords.append((coord[0] - 1, coord[1] - 1))  # up-left
+                    if coord[0] > 7 and coord[1] < 5:
+                        new_coords.append((coord[0] - 1, coord[1] + 1))  # up-right
+                    if coord[0] < 9 and coord[1] > 3:
+                        new_coords.append((coord[0] + 1, coord[1] - 1))  # down-left
+                    if coord[0] < 9 and coord[1] < 5:
+                        new_coords.append((coord[0] + 1, coord[1] + 1))  # down-right
                 else:
-                    pass
+                    if coord[0] > 0 and coord[1] > 3:
+                        new_coords.append((coord[0] - 1, coord[1] - 1))  # up-left
+                    if coord[0] > 0 and coord[1] < 5:
+                        new_coords.append((coord[0] - 1, coord[1] + 1))  # up-right
+                    if coord[0] < 2 and coord[1] > 3:
+                        new_coords.append((coord[0] + 1, coord[1] - 1))  # down-left
+                    if coord[0] < 2 and coord[1] < 5:
+                        new_coords.append((coord[0] + 1, coord[1] + 1))  # down-right
+            
             elif piece_type == Piece.GENERAL.value:
                 if piece_owner == 0:
-                    pass
+                    if coord[0] > 7:
+                        new_coords.append((coord[0] - 1, coord[1]))  # forward
+                    if coord[0] < 9:
+                        new_coords.append((coord[0] + 1, coord[1]))  # backward
+                    if coord[1] > 3:
+                        new_coords.append((coord[0], coord[1] - 1))  # left
+                    if coord[1] < 5:
+                        new_coords.append((coord[0], coord[1] + 1))  # right
                 else:
-                    pass
+                    if coord[0] > 0:
+                        new_coords.append((coord[0] - 1, coord[1]))  # backward
+                    if coord[0] < 2:
+                        new_coords.append((coord[0] + 1, coord[1]))  # forward
+                    if coord[1] > 3:
+                        new_coords.append((coord[0], coord[1] - 1))  # left
+                    if coord[1] < 5:
+                        new_coords.append((coord[0], coord[1] + 1))  # right
+
+            for new_coord in new_coords:
+                if (self.cur_state[new_coord] == 0 or piece_id_to_owner[self.cur_state[new_coord] - 1] != piece_owner) \
+                        and coord != new_coord:
+                    self.availables[piece_id].append(new_coord)
 
     def check_move_validity(self, piece_id, coord):
         valid = piece_id in self.availables.keys() \
-            and self.coord_to_idx(coord) in self.availables[piece_id]
+            and coord in self.availables[piece_id]
+        # print("validity", piece_id, coord, valid, self.availables[piece_id])
         return valid
 
-    def move_piece(self, piece_id, coord: QPoint):
+    def move_piece(self, piece_id, coord):
         self.cur_state[np.where(self.cur_state == piece_id)] = 0
-        self.cur_state[coord.x(), coord.y()] = piece_id
+        self.cur_state[coord] = piece_id
         self.update_availables()
 
     def game_finished(self):
         return False, -1
 
-    def coord_to_idx(self, coord: QPoint):
-        return coord.x() * self.width + coord.y()
+    def coord_to_idx(self, coord):
+        return coord[0] * self.width + coord[1]
     
