@@ -300,7 +300,7 @@ class Board:
         # print("validity", piece_id, coord, valid, self.availables[piece_id])
         return valid
     
-    def move_piece(self, player, piece_id, coord):
+    def move_piece(self, piece_id, coord):
         self.cur_state[np.where(self.cur_state == piece_id)] = 0
         self.cur_state[coord] = piece_id
         self.update_availables(self.cur_state)

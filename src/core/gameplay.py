@@ -54,7 +54,7 @@ class GameplayThread(QThread):
             elif self.board.check_move_available(self.selected_piece, coord):
                 # make the move
                 print(f"GameplayThread: user {self.player_names[self.cur_player]} moved piece_id: {self.selected_piece} to {coord}")
-                self.board.move_piece(self.cur_player, self.selected_piece, coord)
+                self.board.move_piece(self.selected_piece, coord)
                 self.player_moved_signal.emit(self.selected_piece, coord)
                 self.cur_player = 1 - self.cur_player  # switch the player
                 # reset variables
