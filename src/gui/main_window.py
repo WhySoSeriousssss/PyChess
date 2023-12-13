@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMessageBox
 from gui.menu_ui import MenuUI
 from gui.chess_board_scene import ChessboardScene
 from gui.chess_board_view import ChessboardView
@@ -40,11 +40,14 @@ class MainWindow(QMainWindow):
         # start game loop
         self.gameplay_thread.start()
 
+    def init_game_AI_vs_AI(self):
+        pass
+
     def handle_self_player_finished(self, winner):
-        print(f"GAME FINISHED! WINNER IS PLAYER {winner}")
         self.gameplay_thread.terminate()
         self.gameplay_thread.wait()
         self.gameplay_thread.deleteLater()
+        QMessageBox.information(self, "Game Over", f"Player {winner} Won!")
         self.init_menu()
 
     def closeEvent(self, event):
