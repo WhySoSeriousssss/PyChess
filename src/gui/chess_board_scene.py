@@ -2,7 +2,7 @@ import os
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsPixmapItem
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt, QPoint, Signal
-from core.board import *
+from game_core.board import *
 
 
 ASSET_BOARD_PATH = "assets/board/xiangqi_gmchess_wood.png"

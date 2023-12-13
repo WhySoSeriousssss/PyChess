@@ -25,7 +25,6 @@ class Board:
         self.width = 9
         self.cur_state = np.zeros((self.height, self.width), dtype=int)
         self.availables = defaultdict(list)
-        self.players_in_check = [False, False]
 
     def init_board(self, start_player):
         self.cur_state = np.array([
@@ -42,6 +41,7 @@ class Board:
         ])
         self.cur_player = start_player
         self.start_player = start_player
+        self.players_in_check = [False, False]
         self.update_availables(self.cur_state)
 
     def update_availables(self, board_state):
@@ -238,7 +238,7 @@ class Board:
 
             for new_coord in new_coords:
                 if (board_state[new_coord] == 0 or piece_id_to_owner[board_state[new_coord] - 1] != piece_owner) \
-                        and coord != new_coord:
+                        and coord != new_coord and self.check_move_valid(piece_owner, piece_id, new_coord):
                     self.availables[piece_id].append(new_coord)
 
     def check_move_valid(self, player, piece_id, coord):
@@ -248,14 +248,19 @@ class Board:
         state = self.cur_state.copy()
         state[np.where(self.cur_state == piece_id)] = 0
         state[coord] = piece_id
-        return not self.check_generals_meet(self, state) \
-            and not self.check_player_in_check(player, state) 
+        return not self.check_generals_meet(state) \
+            # and not self.check_player_in_check(player, state) 
 
     def check_generals_meet(self, board_state):
         """
         Check if 2 generals are in the same column and there are no other pieces in between
         """
-        # TODO: implement
+        red_general_pos_y = np.where(board_state == 28)[1][0]
+        black_general_pos_y = np.where(board_state == 5)[1][0]
+        if red_general_pos_y != black_general_pos_y:  # 2 generals not in the same column
+            return False
+        if np.sum(board_state[:, red_general_pos_y]) == 33:  # only 2 generals in the same column
+            return True
         return False
     
     def check_player_in_check(self, player, board_state):
@@ -305,6 +310,11 @@ class Board:
         self.cur_state[coord] = piece_id
         self.update_availables(self.cur_state)
         self.cur_player = 1 - self.cur_player  # switch the player
+        # update kings pos
+        if piece_id == 5:
+            self.generals_pos[1] = coord
+        elif piece_id == 28:
+            self.generals_pos[0] = coord
 
     def game_finished(self):
         p1_in_check = self.check_player_in_check(0, self.cur_state)
@@ -319,7 +329,6 @@ class Board:
             return True, 0
         self.players_in_check[1] = p2_in_check
 
-        
         return False, -1
 
     def coord_to_idx(self, coord):

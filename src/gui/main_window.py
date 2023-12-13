@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
 from gui.menu_ui import MenuUI
 from gui.chess_board_scene import ChessboardScene
 from gui.chess_board_view import ChessboardView
-from core.gameplay import GameplayThread, GameMode
+from game_core.gameplay import GameplayThread, GameMode
 import time
 
 

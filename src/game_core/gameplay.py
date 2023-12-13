@@ -1,6 +1,6 @@
 from PySide6.QtCore import QThread, Signal
 from enum import Enum
-from core.board import *
+from game_core.board import *
 
 
 class GameMode(Enum):
