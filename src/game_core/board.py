@@ -255,11 +255,15 @@ class Board:
         """
         Check if 2 generals are in the same column and there are no other pieces in between
         """
-        red_general_pos_y = np.where(board_state == 28)[1][0]
-        black_general_pos_y = np.where(board_state == 5)[1][0]
-        if red_general_pos_y != black_general_pos_y:  # 2 generals not in the same column
+        red_general_pos = np.where(board_state == 28)
+        if not red_general_pos:
             return False
-        if np.sum(board_state[:, red_general_pos_y]) == 33:  # only 2 generals in the same column
+        black_general_pos = np.where(board_state == 28)
+        if not black_general_pos:
+            return False
+        if red_general_pos[1][0] != black_general_pos[1][0]:  # 2 generals not in the same column
+            return False
+        if np.sum(board_state[:, red_general_pos[1][0]]) == 33:  # only 2 generals in the same column
             return True
         return False
     
@@ -310,11 +314,6 @@ class Board:
         self.cur_state[coord] = piece_id
         self.update_availables(self.cur_state)
         self.cur_player = 1 - self.cur_player  # switch the player
-        # update kings pos
-        if piece_id == 5:
-            self.generals_pos[1] = coord
-        elif piece_id == 28:
-            self.generals_pos[0] = coord
 
     def game_finished(self):
         p1_in_check = self.check_player_in_check(0, self.cur_state)
