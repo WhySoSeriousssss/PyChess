@@ -318,7 +318,7 @@ class Board:
     def game_finished(self):
         p1_in_check = self.check_player_in_check(0, self.cur_state)
         p2_in_check = self.check_player_in_check(1, self.cur_state)
-        print(f"Player1 checked: {p1_in_check}, Player2 checked: {p2_in_check}")
+        # print(f"Player1 checked: {p1_in_check}, Player2 checked: {p2_in_check}")
         # check p1
         if p1_in_check and (self.players_in_check[0] or self.cur_player == 1):
             return True, 1
