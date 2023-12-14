@@ -3,7 +3,6 @@ from gui.menu_ui import MenuUI
 from gui.chess_board_scene import ChessboardScene
 from gui.chess_board_view import ChessboardView
 from game_core.gameplay import GameplayThread, GameMode
-import time
 
 
 class MainWindow(QMainWindow):
@@ -17,10 +16,10 @@ class MainWindow(QMainWindow):
 
     def init_menu(self):
         menu_ui = MenuUI()
-        menu_ui.self_play_signal.connect(self.init_game_self_play)
+        menu_ui.start_game_signal.connect(self.start_game)
         self.setCentralWidget(menu_ui)
 
-    def init_game_self_play(self):
+    def start_game(self, game_mode):
         # init game UI
         self.game_ui_widget = QWidget()
         self.board_scene = ChessboardScene(902, 1002)
@@ -29,13 +28,14 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(self.game_ui_widget)
         layout.addWidget(self.board_view)
         self.setCentralWidget(self.game_ui_widget)
-        
+
         # init gameplay thread
         self.gameplay_thread = GameplayThread(self)
         self.gameplay_thread.player_moved_signal.connect(self.board_scene.update_board_ui)
         self.gameplay_thread.game_finished_signal.connect(self.handle_self_player_finished)
-        self.board_scene.board_clicked_signal.connect(self.gameplay_thread.handle_user_input)
-        self.gameplay_thread.init_game(GameMode.SELF_PLAY, ["player1", "player2"], 0)
+        if game_mode != GameMode.BOT_COMBAT:
+            self.board_scene.board_clicked_signal.connect(self.gameplay_thread.handle_user_input)
+        self.gameplay_thread.init_game(game_mode, 0)
 
         # start game loop
         self.gameplay_thread.start()
