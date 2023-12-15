@@ -26,8 +26,6 @@ class Board:
     def __init__(self):
         self.height = 10
         self.width = 9
-        self.cur_state = np.zeros((self.height, self.width), dtype=int)
-        self.availables = defaultdict(list)
 
     def init_board(self, start_player):
         self.cur_state = np.array([
@@ -42,9 +40,12 @@ class Board:
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [24, 25, 26, 27, 28, 29, 30, 31, 32]
         ])
+        self.prev_states = []  # a list of the last 8 states (for AlphaZero training purpose)
+        self.all_moves = []  # a list of all moves (for replay purpose)
         self.cur_player = start_player
         self.start_player = start_player
         self.players_in_check = [False, False]
+        self.availables = defaultdict(list)  # a dict of all moves the are currently available. key: piece_id, value: coord(tuple(x, y))
         self.update_availables(self.cur_state)
 
     def update_availables(self, board_state):
@@ -313,10 +314,19 @@ class Board:
         return valid
     
     def move_piece(self, piece_id, coord):
+        # update the board state
         self.cur_state[np.where(self.cur_state == piece_id)] = 0
         self.cur_state[coord] = piece_id
+        # keep track of the move
+        self.all_moves.append((piece_id, coord))
+        # keep track of the 8 previous moves
+        self.prev_states.append(self.cur_state.copy())
+        if len(self.prev_states) > 8:
+            self.prev_states.pop()
+        # update the available moves
         self.update_availables(self.cur_state)
-        self.cur_player = 1 - self.cur_player  # switch the player
+        # switch the player
+        self.cur_player = 1 - self.cur_player
 
     def game_finished(self):
         p1_in_check = self.check_player_in_check(0, self.cur_state)
@@ -335,4 +345,11 @@ class Board:
 
     def coord_to_idx(self, coord):
         return coord[0] * self.width + coord[1]
+    
+    # For AlphaZero evaluation purposes
+    def get_eval_state(self):
+        """
+        return the board state from the perspective of the current player.
+        """
+        pass
     
