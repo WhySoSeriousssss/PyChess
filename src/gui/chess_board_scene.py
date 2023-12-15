@@ -5,15 +5,16 @@ from PySide6.QtCore import Qt, QPoint, Signal
 from game_core.board import *
 
 
-ASSET_BOARD_PATH = "assets/board/xiangqi_gmchess_wood.png"
+ASSET_BOARD_PATH = "assets/board/board.png"
 ASSET_PIECES_PATH = "assets/pieces/"
 PIECES_FILE_NAMES = ["red_pawn", "red_cannon", "red_rook", "red_knight", "red_bishop", "red_advisor", "red_king",
                      "black_pawn", "black_cannon", "black_rook", "black_knight", "black_bishop", "black_advisor", "black_king"]
 
-PIECE_SIZE = (100, 100)
-BOARD_SIZE = (1002, 902)
-BOARD_OFFSET = (51, 51)
-BOARD_SPACING = (100, 100)
+PIECE_SIZE = (50, 50)
+PIECE_CLICKABLE_AREA = (40, 40)
+BOARD_SIZE = (500, 450)
+BOARD_OFFSET = (25, 25)
+BOARD_SPACING = (50, 50)
 
 
 class ChessPiece(QGraphicsPixmapItem):
@@ -88,14 +89,13 @@ class ChessboardScene(QGraphicsScene):
         handle the click event from the game board label, convert the clicked position to the board coordinate,
         and send the game_board_click signal
         """
-        piece_clickable_range = (80, 80)
         # transform the clicked position
         pos = QPoint(event.scenePos().y(), event.scenePos().x())
         pos = pos - QPoint(BOARD_OFFSET[0], BOARD_OFFSET[1])
-        pos = pos + QPoint(piece_clickable_range[0] // 2, piece_clickable_range[1] // 2)
+        pos = pos + QPoint(PIECE_CLICKABLE_AREA[0] // 2, PIECE_CLICKABLE_AREA[1] // 2)
         # check if the clicked position is inside the valid area
-        if (0 < pos.x() % BOARD_SPACING[0] < piece_clickable_range[0] \
-                and 0 < pos.y() % BOARD_SPACING[1] < piece_clickable_range[1]):
+        if (0 < pos.x() % BOARD_SPACING[0] < PIECE_CLICKABLE_AREA[0] \
+                and 0 < pos.y() % BOARD_SPACING[1] < PIECE_CLICKABLE_AREA[1]):
             # convert click position to game board coordinate
             x_idx, y_idx = pos.x() // BOARD_SPACING[0], pos.y() // BOARD_SPACING[1]
             self.board_clicked_signal.emit((x_idx, y_idx))

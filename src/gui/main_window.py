@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
 
         self.app = app
         self.setWindowTitle("PyChess")
-        self.resize(1000, 1200)        
+        self.resize(500, 600)        
         self.init_menu()
 
     def init_menu(self):
@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
     def start_game(self, game_mode):
         # init game UI
         self.game_ui_widget = QWidget()
-        self.board_scene = ChessboardScene(902, 1002)
+        self.board_scene = ChessboardScene(450, 500)
         self.board_view = ChessboardView(self.board_scene)
 
         layout = QVBoxLayout(self.game_ui_widget)
