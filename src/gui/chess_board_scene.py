@@ -33,11 +33,11 @@ class ChessPiece(QGraphicsPixmapItem):
 class ChessboardScene(QGraphicsScene):
     board_clicked_signal = Signal(tuple)  # coord
 
-    def __init__(self, width, height):
+    def __init__(self):
         super().__init__()
-        self.setSceneRect(0, 0, width, height)
+        self.setSceneRect(0, 0, BOARD_SIZE[1], BOARD_SIZE[0])
         # init board
-        chessboard_pixmap = QPixmap(ASSET_BOARD_PATH).scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio, Qt.SmoothTransformation)
+        chessboard_pixmap = QPixmap(ASSET_BOARD_PATH).scaled(BOARD_SIZE[1], BOARD_SIZE[0], Qt.AspectRatioMode.KeepAspectRatio, Qt.SmoothTransformation)
         self.chessboard_item = QGraphicsPixmapItem(chessboard_pixmap)
         self.addItem(self.chessboard_item)
         # init chess pieces

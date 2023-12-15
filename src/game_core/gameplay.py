@@ -38,7 +38,6 @@ class GameplayThread(QThread):
 
     def handle_user_input(self, coord):
         piece_id = self.board.cur_state[coord]
-        print("handle_user_input()", coord, piece_id)
         # first input: piece
         if self.selected_piece == 0:
             # player selected his own piece

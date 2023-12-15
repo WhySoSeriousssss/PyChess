@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
     def start_game(self, game_mode):
         # init game UI
         self.game_ui_widget = QWidget()
-        self.board_scene = ChessboardScene(450, 500)
+        self.board_scene = ChessboardScene()
         self.board_view = ChessboardView(self.board_scene)
 
         layout = QVBoxLayout(self.game_ui_widget)
