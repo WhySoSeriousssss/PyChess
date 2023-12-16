@@ -47,7 +47,10 @@ class MainWindow(QMainWindow):
         self.gameplay_thread.terminate()
         self.gameplay_thread.wait()
         self.gameplay_thread.deleteLater()
-        QMessageBox.information(self, "Game Over", f"Player {winner} Won!")
+        if winner == -1:
+            QMessageBox.information(self, "Game Over", f"It's a tie!")
+        else:
+            QMessageBox.information(self, "Game Over", f"Player {winner} Won!")
         self.init_menu()
 
     def closeEvent(self, event):
