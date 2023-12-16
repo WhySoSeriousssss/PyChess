@@ -4,6 +4,11 @@ from PySide6.QtCore import QThread, Signal
 from game_core.board import piece_id_to_owner
 
 
+class MCTS:
+    def __init__(self):
+        pass
+
+
 class MCTSPlayer:
     def __init__(self, player_id, name):
         self.player_id = player_id

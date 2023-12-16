@@ -27,6 +27,7 @@ class Board:
         self.height = 10
         self.width = 9
         self.n_steps_to_tie = 20  # if no piece dies in 15 steps, the game will be consider as a tie
+        self.n_prev_states = 4
 
     def init_board(self, start_player):
         self.cur_state = np.array([
@@ -41,7 +42,7 @@ class Board:
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [24, 25, 26, 27, 28, 29, 30, 31, 32]
         ])
-        self.prev_states = []  # a list of the last 8 states (for AlphaZero training purpose)
+        self.prev_states = [None for _ in range(self.n_prev_states)]  # a list of the last {n_prev_states} states (for AlphaZero training purpose)
         self.all_moves = []  # a list of all moves (for replay purpose)
         self.cur_player = start_player
         self.start_player = start_player
@@ -326,10 +327,10 @@ class Board:
         self.cur_state[coord] = piece_id
         # keep track of the move
         self.all_moves.append((piece_id, coord))
-        # keep track of the 8 previous moves
+        # keep track of the {n_prev_states} previous moves
         self.prev_states.append(self.cur_state.copy())
-        if len(self.prev_states) > 8:
-            self.prev_states.pop()
+        self.prev_states.pop(0)
+        print(self.get_eval_state(self.cur_player))
         # update the available moves
         self.update_availables(self.cur_state)
         # switch the player
@@ -357,9 +358,53 @@ class Board:
         return coord[0] * self.width + coord[1]
     
     # For AlphaZero evaluation purposes
-    def get_eval_state(self):
+    def get_eval_state(self, player_id):
         """
         return the board state from the perspective of the current player.
         """
-        pass
+        eval_state = np.zeros((self.n_prev_states * 2 + 1, self.height, self.width))
+        for i, state in enumerate(self.prev_states):
+            if state is not None:
+                eval_state[i * 2, :, :] = board_state_to_player_perspective_1(state, player_id)
+                eval_state[i * 2 + 1, :, :] = board_state_to_player_perspective_1(state, 1 - player_id)
+        if player_id == self.start_player:
+            eval_state[-1, :, :] = 1
+        return eval_state
+
+        
+
+def board_state_to_player_perspective_1(board_state, player_id):
+    """
+    Convert the board state to the state of the player's perspective
+    """
+    piece_id_to_type_ = np.array(piece_id_to_type)
+    piece_id_to_owner_ = np.array(piece_id_to_owner) == player_id
     
+    state_copy1 = board_state.copy()
+    state_copy1[state_copy1 != 0] = piece_id_to_type_[state_copy1[np.nonzero(state_copy1)] - 1]
+
+    state_copy2 = board_state.copy()
+    state_copy2[state_copy2 != 0] = piece_id_to_owner_[state_copy2[np.nonzero(state_copy2)] - 1]
+
+    state = state_copy1 * state_copy2
+    return state
+
+def board_state_to_player_perspective_2(board_state, player_id):
+    """
+    Convert the board state to the state of the player's perspective
+    """
+    piece_id_to_type_ = np.array(piece_id_to_type)
+    piece_id_to_owner_ = np.array(piece_id_to_owner)
+
+    mask = piece_id_to_owner_ == player_id
+    piece_id_to_owner_[mask] = 1
+    piece_id_to_owner_[~mask] = -1
+    
+    state_copy1 = board_state.copy()
+    state_copy1[state_copy1 != 0] = piece_id_to_type_[state_copy1[np.nonzero(state_copy1)] - 1]
+
+    state_copy2 = board_state.copy()
+    state_copy2[state_copy2 != 0] = piece_id_to_owner_[state_copy2[np.nonzero(state_copy2)] - 1]
+
+    state = state_copy1 * state_copy2
+    return state
