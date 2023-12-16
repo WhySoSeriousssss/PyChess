@@ -26,6 +26,7 @@ class Board:
     def __init__(self):
         self.height = 10
         self.width = 9
+        self.n_steps_to_tie = 20  # if no piece dies in 15 steps, the game will be consider as a tie
 
     def init_board(self, start_player):
         self.cur_state = np.array([
@@ -47,6 +48,7 @@ class Board:
         self.players_in_check = [False, False]
         self.availables = defaultdict(list)  # a dict of all moves the are currently available. key: piece_id, value: coord(tuple(x, y))
         self.update_availables(self.cur_state)
+        self.n_steps_no_piece_die = 0
 
     def update_availables(self, board_state):
         self.availables.clear()
@@ -314,6 +316,11 @@ class Board:
         return valid
     
     def move_piece(self, piece_id, coord):
+        # update n_steps_no_piece_die
+        if self.cur_state[coord] == 0:
+            self.n_steps_no_piece_die += 1
+        else:
+            self.n_steps_no_piece_die = 0
         # update the board state
         self.cur_state[np.where(self.cur_state == piece_id)] = 0
         self.cur_state[coord] = piece_id
@@ -340,6 +347,9 @@ class Board:
         if p2_in_check and (self.players_in_check[1] or self.cur_player == 0):
             return True, 0
         self.players_in_check[1] = p2_in_check
+        # check tie
+        if self.n_steps_no_piece_die == self.n_steps_to_tie:
+            return True, -1
 
         return False, -1
 
