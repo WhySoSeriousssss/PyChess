@@ -13,14 +13,47 @@ class Piece(Enum):
     ADVISOR     = 6  # 士
     GENERAL     = 7  # 帅/将
 
-piece_id_to_type = [3, 4, 5, 6, 7, 6, 5, 4, 3, 2, 2, 1, 1, 1, 1, 1,
+piece_id_to_type = [1, 1, 1, 1, 1, 2, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3,
                     1, 1, 1, 1, 1, 2, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3]
 
-piece_id_to_owner = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # 0: red, 1: black
+piece_id_to_owner = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # 0: red, 1: black
 
-piece_id_to_chinese_name = ["車", "馬", "象", "士", "将", "士", "象", "馬", "車", "炮", "炮", "卒", "卒", "卒", "卒", "卒",
-                            "兵", "兵", "兵", "兵", "兵", "炮", "炮", "車", "馬", "相", "仕", "帅", "仕", "相", "馬", "車"]
+piece_id_to_chinese_name = ["兵", "兵", "兵", "兵", "兵", "炮", "炮", "車", "馬", "相", "仕", "帅", "仕", "相", "馬", "車",
+                            "卒", "卒", "卒", "卒", "卒", "炮", "炮", "車", "馬", "象", "士", "将", "士", "象", "馬", "車"]
+
+piece_id_encoded_move_offset = [0, 4, 8, 12, 16, 20, 54, 88, 122, 130, 134, 138, 142, 146, 150, 158]
+
+move_encoding_coord_offset = [
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # 1. soldier
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # 2. soldier
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # 3. soldier
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # 4. soldier
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # 5. soldier
+    (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7), (0, -8),  # 6. cannon, left
+    (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0), (-8, 0), (-9, 0),  # 6. cannon, forward
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8),  # 6. cannon, right
+    (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0),  # 6. cannon, backward
+    (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7), (0, -8),  # 7. cannon, left
+    (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0), (-8, 0), (-9, 0),  # 7. cannon, forward
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8),  # 7. cannon, right
+    (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0),  # 7. cannon, backward
+    (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7), (0, -8),  # 8. chariot, left
+    (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0), (-8, 0), (-9, 0),  # 8. chariot, forward
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8),  # 8. chariot, right
+    (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0),  # 8. chariot, backward
+    (-1, -2), (-2, -1), (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1), (1, -2),  # 9. horse
+    (-2, -2), (-2, 2), (2, 2), (2, -2),  # 10. elephant
+    (-1, -1), (-1, 1), (1, 1), (1, -1),  # 11. advisor
+    (0, -1), (-1, 0), (0, 1), (1, 0),  # general
+    (-1, -1), (-1, 1), (1, 1), (1, -1),  # 13. advisor
+    (-2, -2), (-2, 2), (2, 2), (2, -2),  # 14. elephant
+    (-1, -2), (-2, -1), (-2, 1), (-1, 2), (1, 2), (2, 1), (2, -1), (1, -2),  # 15. horse
+    (0, -1), (0, -2), (0, -3), (0, -4), (0, -5), (0, -6), (0, -7), (0, -8),  # 16. chariot, left
+    (-1, 0), (-2, 0), (-3, 0), (-4, 0), (-5, 0), (-6, 0), (-7, 0), (-8, 0), (-9, 0),  # 16. chariot, forward
+    (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8),  # 16. chariot, right
+    (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0) # 16. chariot, backward
+]
 
 class Board:
     def __init__(self):
@@ -31,16 +64,16 @@ class Board:
 
     def init_board(self, start_player):
         self.cur_state = np.array([
-            [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            [32, 31, 30, 29, 28, 27, 26, 25, 24],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 10, 0, 0, 0, 0, 0, 11, 0],
-            [12, 0, 13, 0, 14, 0, 15, 0, 16],
+            [0, 23, 0, 0, 0, 0, 0, 22, 0],
+            [21, 0, 20, 0, 19, 0, 18, 0, 17],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [17, 0, 18, 0, 19, 0, 20, 0, 21],
-            [0, 22, 0, 0, 0, 0, 0, 23, 0],
+            [1, 0, 2, 0, 3, 0, 4, 0, 5],
+            [0, 6, 0, 0, 0, 0, 0, 7, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [24, 25, 26, 27, 28, 29, 30, 31, 32]
+            [8, 9, 10, 11, 12, 13, 14, 15, 16]
         ])
         self.prev_states = [None for _ in range(self.n_prev_states)]  # a list of the last {n_prev_states} states (for AlphaZero training purpose)
         self.all_moves = []  # a list of all moves (for replay purpose)
@@ -262,15 +295,15 @@ class Board:
         """
         Check if 2 generals are in the same column and there are no other pieces in between
         """
-        red_general_pos = np.where(board_state == 28)
-        if not red_general_pos:
+        red_general_pos = np.where(board_state == 12)
+        if len(red_general_pos[0]) == 0:
             return False
         black_general_pos = np.where(board_state == 28)
-        if not black_general_pos:
+        if len(black_general_pos[0]) == 0:
             return False
         if red_general_pos[1][0] != black_general_pos[1][0]:  # 2 generals not in the same column
             return False
-        if np.sum(board_state[:, red_general_pos[1][0]]) == 33:  # only 2 generals in the same column
+        if np.sum(board_state[black_general_pos[0][0]+1:red_general_pos[0][0], red_general_pos[1][0]]) == 0:  # only 2 generals in the same column
             return True
         return False
     
@@ -279,9 +312,9 @@ class Board:
         Check if a player is in check
         """
         if player == 0:
-            general_piece_id = 28
+            general_piece_id = 12
         else:
-            general_piece_id = 5
+            general_piece_id = 28
         general_coord = tuple(np.transpose(np.where(board_state == general_piece_id))[0])
         # check if the player's general is in the attack range of any opponent's piece
         for piece_id, moves in self.availables.items():
@@ -330,24 +363,29 @@ class Board:
         # keep track of the {n_prev_states} previous moves
         self.prev_states.append(self.cur_state.copy())
         self.prev_states.pop(0)
-        print(self.get_eval_state(self.cur_player))
         # update the available moves
         self.update_availables(self.cur_state)
         # switch the player
         self.cur_player = 1 - self.cur_player
 
     def game_finished(self):
-        p1_in_check = self.check_player_in_check(0, self.cur_state)
-        p2_in_check = self.check_player_in_check(1, self.cur_state)
-        # print(f"Player1 checked: {p1_in_check}, Player2 checked: {p2_in_check}")
-        # check p1
-        if p1_in_check and (self.players_in_check[0] or self.cur_player == 1):
-            return True, 1
-        self.players_in_check[0] = p1_in_check
-        # check p2
-        if p2_in_check and (self.players_in_check[1] or self.cur_player == 0):
+
+        # p1_in_check = self.check_player_in_check(0, self.cur_state)
+        # p2_in_check = self.check_player_in_check(1, self.cur_state)
+        # # print(f"Player1 checked: {p1_in_check}, Player2 checked: {p2_in_check}")
+        # # check p1
+        # if p1_in_check and (self.players_in_check[0] or self.cur_player == 1):
+        #     return True, 1
+        # self.players_in_check[0] = p1_in_check
+        # # check p2
+        # if p2_in_check and (self.players_in_check[1] or self.cur_player == 0):
+        #     return True, 0
+        # self.players_in_check[1] = p2_in_check
+
+        if 28 not in self.cur_state:
             return True, 0
-        self.players_in_check[1] = p2_in_check
+        if 12 not in self.cur_state:
+            return True, 1
         # check tie
         if self.n_steps_no_piece_die == self.n_steps_to_tie:
             return True, -1
@@ -357,10 +395,10 @@ class Board:
     def coord_to_idx(self, coord):
         return coord[0] * self.width + coord[1]
     
-    # For AlphaZero evaluation purposes
+    ### For AlphaZero evaluation purposes ###
     def get_eval_state(self, player_id):
         """
-        return the board state from the perspective of the current player.
+        return the board state from the perspective of the player.
         """
         eval_state = np.zeros((self.n_prev_states * 2 + 1, self.height, self.width))
         for i, state in enumerate(self.prev_states):
@@ -370,7 +408,38 @@ class Board:
         if player_id == self.start_player:
             eval_state[-1, :, :] = 1
         return eval_state
+    
+    def get_player_encoded_availables(self, player_id):
+        """
+        return the encoded availables moves of the player in numeric values
+        """
+        encoded_moves = [0 for _ in range(192)]
+        for piece_id, coords in self.availables.items():
+            if piece_id_to_owner[piece_id - 1] == player_id:
+                for coord in coords:
+                    encoded_move = self.encode_move(piece_id, coord)
+                    encoded_moves[encoded_move] = 1
+        return encoded_moves
+    
+    def decode_move(self, move, player_id):
+        piece_id = np.searchsorted(piece_id_encoded_move_offset, move, side='right')
+        if player_id == 1:
+            piece_id += 16
+        coord = tuple(np.transpose(np.where(self.cur_state == piece_id))[0])
+        coord_offset = move_encoding_coord_offset[move]
+        coord = (coord[0] + coord_offset[0], coord[1] + coord_offset[1])
+        return piece_id, coord
 
+    def encode_move(self, piece_id, coord):
+        piece_owner = piece_id_to_owner[piece_id - 1]
+        piece_coord = tuple(np.transpose(np.where(self.cur_state == piece_id))[0])
+        coord_offset = (coord[0] - piece_coord[0], coord[1] - piece_coord[1])
+        if piece_owner == 0:
+            idx_offset = piece_id_encoded_move_offset[piece_id - 1]
+        else:
+            idx_offset = piece_id_encoded_move_offset[piece_id - 16 - 1]
+        move = move_encoding_coord_offset.index(coord_offset, idx_offset)
+        return move
         
 
 def board_state_to_player_perspective_1(board_state, player_id):
@@ -408,3 +477,5 @@ def board_state_to_player_perspective_2(board_state, player_id):
 
     state = state_copy1 * state_copy2
     return state
+
+
