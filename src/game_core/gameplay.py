@@ -13,9 +13,9 @@ class GameplayThread(QThread):
         if game_mode == GameMode.SELF_PLAY.value:
             self.players = [HumanPlayer(0, "gg"), HumanPlayer(1, "mm")]
         elif game_mode == GameMode.PLAY_WITH_BOT.value:
-            self.players = [HumanPlayer(0, "gg"), MCTSPlayer(1, "bot1")]
+            self.players = [HumanPlayer(0, "gg"), MCTSPlayer(1, "bot1", n_simulations=100)]
         elif game_mode == GameMode.BOT_COMBAT.value:
-            self.players = [MCTSPlayer(0, "bot1"), MCTSPlayer(1, "bot2")]
+            self.players = [MCTSPlayer(0, "bot1", n_simulations=100), MCTSPlayer(1, "bot2", n_simulations=100)]
 
         self.start_player_id = start_player
         self.cur_player_id = start_player
@@ -27,8 +27,9 @@ class GameplayThread(QThread):
         while True:
             player_in_turn = self.players[self.cur_player_id]
             piece_id, coord = player_in_turn.get_action(self.board)  # player take action
-            print(f"[GameplayThread]: Player \"{player_in_turn.name}\" moved {piece_id_to_chinese_name[piece_id]}({piece_id}) to {coord}")
+            print(f"[GameplayThread]: Player \"{player_in_turn.name}\" moved {piece_id_to_chinese_name[piece_id-1]}({piece_id}) to {coord}")
             self.board.move_piece(piece_id, coord)  # update board state
+
             self.player_moved_signal.emit(piece_id, coord)  # update UI
             game_finished, winner = self.board.game_finished()  # check game finished
             if game_finished:
@@ -44,7 +45,7 @@ class GameplayThread(QThread):
             if piece_id != 0 and piece_id_to_owner[piece_id - 1] == self.cur_player_id:
                 self.selected_piece = piece_id
                 self.players[self.cur_player_id].set_piece(piece_id)
-                print(f"[GameplayThread]: Player \"{self.players[self.cur_player_id].name}\" selected {piece_id_to_chinese_name[self.selected_piece]}({self.selected_piece}). Availables:{self.board.availables[self.selected_piece]}")
+                print(f"[GameplayThread]: Player \"{self.players[self.cur_player_id].name}\" selected {piece_id_to_chinese_name[self.selected_piece-1]}({self.selected_piece}). Availables:{self.board.availables[self.selected_piece]}")
         # second input: coord
         else:
             # player selected his own piece
@@ -52,7 +53,7 @@ class GameplayThread(QThread):
                 # change selected piece
                 self.selected_piece = piece_id
                 self.players[self.cur_player_id].set_piece(piece_id)
-                print(f"[GameplayThread]: Player \"{self.players[self.cur_player_id].name}\" selected {piece_id_to_chinese_name[self.selected_piece]}({self.selected_piece}). Availables:{self.board.availables[self.selected_piece]}")
+                print(f"[GameplayThread]: Player \"{self.players[self.cur_player_id].name}\" selected {piece_id_to_chinese_name[self.selected_piece-1]}({self.selected_piece}). Availables:{self.board.availables[self.selected_piece]}")
             # player select a coord, check valid move
             elif self.board.check_move_available(self.selected_piece, coord):
                 # make the move
