@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QMessageBox, QPushButton
 from gui.menu_ui import MenuUI
+from gui.replay_ui import ReplayUI
 from gui.chess_board_scene import ChessboardScene
 from gui.chess_board_view import ChessboardView
 from game_core.gameplay import GameplayThread, GameMode
@@ -11,12 +12,15 @@ class MainWindow(QMainWindow):
 
         self.app = app
         self.setWindowTitle("PyChess")
-        self.resize(500, 600)        
+        self.resize(500, 600)   
+        self.gameplay_thread = None
+        # init menu     
         self.init_menu()
 
     def init_menu(self):
         menu_ui = MenuUI()
         menu_ui.start_game_signal.connect(self.start_game)
+        menu_ui.watch_replay_signal.connect(self.watch_replay)
         self.setCentralWidget(menu_ui)
 
     def start_game(self, game_mode):
@@ -40,8 +44,11 @@ class MainWindow(QMainWindow):
         # start game loop
         self.gameplay_thread.start()
 
-    def init_game_AI_vs_AI(self):
-        pass
+    def watch_replay(self, replay_file):
+        print(f"opened {replay_file}")
+        # init replay UI
+        self.replay_ui = ReplayUI()
+        self.setCentralWidget(self.replay_ui)
 
     def handle_self_player_finished(self, winner):
         self.gameplay_thread.terminate()
@@ -55,6 +62,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         # TODO: "RuntimeError: Internal C++ object (GameplayThread) already deleted."
-        self.gameplay_thread.terminate()
-        self.gameplay_thread.wait()
+        if self.gameplay_thread:
+            self.gameplay_thread.terminate()
+            self.gameplay_thread.wait()
         event.accept()

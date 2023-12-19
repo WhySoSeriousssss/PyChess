@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from PySide6.QtCore import QThread, Signal
 from game_core.board import *
 from game_core.game_info import GameMode
@@ -29,12 +31,16 @@ class GameplayThread(QThread):
             piece_id, coord = player_in_turn.get_action(self.board, self.cur_player_id)  # player take action
             print(f"[GameplayThread]: Player \"{player_in_turn.name}\" moved {piece_id_to_chinese_name[piece_id-1]}({piece_id}) to {coord}")
             self.board.move_piece(piece_id, coord)  # update board state
-
             self.player_moved_signal.emit(piece_id, coord)  # update UI
             game_finished, winner = self.board.game_finished()  # check game finished
             if game_finished:
                 break
             self.cur_player_id = 1 - self.cur_player_id  # switch the player
+        # save the replay
+        cur_time = datetime.now()
+        formatted_time = cur_time.strftime("%Y%m%d-%H%M")
+        self.save_replay(f"replays/{formatted_time}.json")
+        # send game finished signal
         self.game_finished_signal.emit(winner)
 
     def handle_user_input(self, coord):
@@ -60,3 +66,11 @@ class GameplayThread(QThread):
                 self.players[self.cur_player_id].set_coord(coord)
                 # reset variables
                 self.selected_piece = 0
+
+    def save_replay(self, file_path):
+        data = {}
+        data['steps'] = []
+        for move in self.board.all_moves:
+            data['steps'].append([int(move[0]), [int(move[1][0]), int(move[1][1])]])
+        with open(file_path, 'w') as f:
+            json.dump(data, f)
