@@ -10,7 +10,7 @@ class HumanPlayer:
         self.selected_coord = (0, 0)
         self.action_made = False
         
-    def get_action(self, board):
+    def get_action(self, board, cur_player_id):
         while not self.action_made:
             continue
         self.action_made = False

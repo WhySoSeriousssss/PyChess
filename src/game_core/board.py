@@ -59,7 +59,7 @@ class Board:
     def __init__(self):
         self.height = 10
         self.width = 9
-        self.n_steps_to_tie = 20  # if no piece dies in 15 steps, the game will be consider as a tie
+        self.n_steps_to_tie = 40  # if no piece dies in N steps, the game will be consider as a tie
         self.n_prev_states = 4
 
     def init_board(self, start_player):

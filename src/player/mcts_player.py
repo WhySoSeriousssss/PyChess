@@ -1,9 +1,6 @@
-import random
-import time
 import copy
 import math
 import numpy as np
-from game_core.board import piece_id_to_owner
 from player.policy_value_net import PolicyValueNet
 
 
@@ -71,9 +68,9 @@ class MCTS:
     
     def get_move_probs(self, board, player_id, temp=1e-3):
         node = self.root
-        # expand the root node
-        action_probs, leaf_value = self.policy_value_fn(board, player_id)
-        node.expand(action_probs)
+        # # expand the root node
+        # action_probs, leaf_value = self.policy_value_fn(board, player_id)
+        # node.expand(action_probs)
 
         # perform playouts {n_simulations} times
         for i in range(self.n_simulations):
@@ -83,12 +80,12 @@ class MCTS:
             node = self.root
             while not node.is_leaf():
                 action, node = node.select_child(self.c)
-                piece_id, coord = board_copy.decode_move(action, player_id)
+                piece_id, coord = board_copy.decode_move(action, board_copy.cur_player)
                 board_copy.move_piece(piece_id, coord)
         
             # Evaluate the leaf using a network which outputs a list of action, probability) tuples p 
             # and also a score v in [-1, 1] for the current player.
-            action_probs, leaf_value = self.policy_value_fn(board_copy, player_id)
+            action_probs, leaf_value = self.policy_value_fn(board_copy, board_copy.cur_player)
             # check game finished
             finished, winner = board_copy.game_finished()
             if not finished:
@@ -123,15 +120,29 @@ class MCTS:
 
 
 class MCTSPlayer:
-    def __init__(self, player_id, name, c=5, n_simulations=400):
+    def __init__(self, policy_value_fn, player_id, name, c=5, n_simulations=400, is_training=False):
         self.player_id = player_id
         self.name = name
-        policy_value_net = PolicyValueNet(10, 9, 9, 192)
-        self.mcts = MCTS(policy_value_net.policy_value_fn, c, n_simulations)
+        self.mcts = MCTS(policy_value_fn, c, n_simulations)
+        self.is_training = is_training
 
-    def get_action(self, board):
-        acts, act_probs = self.mcts.get_move_probs(board, self.player_id)
-        move = np.random.choice(acts, p=act_probs)
+    def get_action(self, board, player_id, temp=1e-3, return_probs=False):
+        acts, act_probs = self.mcts.get_move_probs(board, player_id, temp)
+        if self.is_training:
+            move = np.random.choice(acts, p=0.75*act_probs+0.25*np.random.dirichlet(0.3*np.ones(len(act_probs))))
+            self.mcts.update_with_move(move)
+            # self.mcts.update_with_move(-1)
+        else:
+            move = np.random.choice(acts, p=act_probs)
+            self.mcts.update_with_move(-1)
+        decoded_move = board.decode_move(move, player_id)
+
+        if return_probs:
+            move_probs = np.zeros(192)  # n_actions
+            move_probs[list(acts)] = act_probs
+            return decoded_move, move_probs
+        else:
+            return decoded_move
+        
+    def reset_player(self):
         self.mcts.update_with_move(-1)
-
-        return board.decode_move(move, self.player_id)

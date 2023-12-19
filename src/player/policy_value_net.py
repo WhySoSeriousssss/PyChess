@@ -72,11 +72,49 @@ class PolicyValueNet():
         eval_state = np.ascontiguousarray(eval_state.reshape(-1, self.n_state_channels, self.board_height, self.board_width))
         log_act_probs, value = self.model(Variable(torch.from_numpy(eval_state)).to(self.device).float())
         act_probs = np.exp(log_act_probs.data.cpu().numpy().flatten())
-        value = value.data[0][0]
         # filter out the unavailable actions, normalize the new act_probs
         legal_moves = board.get_player_encoded_availables(player_id)
         act_probs[np.array(legal_moves) == 0] = 0.
+        act_probs = act_probs[act_probs != 0.]
         act_probs /= np.sum(act_probs)
         act_probs = zip(np.nonzero(legal_moves)[0], act_probs)
-        return act_probs, value
+        return act_probs, value.data[0][0]
     
+    def policy_value(self, state_batch):
+        """
+        input: a batch of states
+        output: a batch of action probabilities and state values
+        """
+        state_batch = Variable(torch.FloatTensor(state_batch).to(self.device))
+        log_act_probs, value = self.model(state_batch)
+        act_probs = np.exp(log_act_probs.data.cpu().numpy())
+        return act_probs, value.data.cpu().numpy()
+
+    def train_step(self, state_batch, mcts_probs, winner_batch, lr):
+        # wrap data
+        state_batch = Variable(torch.FloatTensor(state_batch).to(self.device))
+        mcts_probs = Variable(torch.FloatTensor(mcts_probs).to(self.device))
+        winner_batch = Variable(torch.FloatTensor(winner_batch).to(self.device))
+
+        # zero the parameter gradients
+        self.optimizer.zero_grad()
+        # set learning rate
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = lr
+        
+        # forward
+        log_act_probs, value = self.model(state_batch)
+        # define the loss = (z - v)^2 - pi^T * log(p) + c||theta||^2
+        # Note: the L2 penalty is incorporated in optimizer
+        value_loss = F.mse_loss(value.view(-1), winner_batch)
+        policy_loss = -torch.mean(torch.sum(mcts_probs * log_act_probs, 1))
+        loss = value_loss + policy_loss
+        # backward and optimize
+        loss.backward()
+        self.optimizer.step()
+        # calc policy entropy, for monitoring only
+        entropy = -torch.mean(torch.sum(torch.exp(log_act_probs) * log_act_probs, 1))
+        return loss.item(), entropy.item()
+    
+    def save_model(self, file_name):
+        torch.save(self.model.state_dict(), file_name)

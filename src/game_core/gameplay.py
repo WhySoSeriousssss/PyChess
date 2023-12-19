@@ -26,7 +26,7 @@ class GameplayThread(QThread):
     def run(self):
         while True:
             player_in_turn = self.players[self.cur_player_id]
-            piece_id, coord = player_in_turn.get_action(self.board)  # player take action
+            piece_id, coord = player_in_turn.get_action(self.board, self.cur_player_id)  # player take action
             print(f"[GameplayThread]: Player \"{player_in_turn.name}\" moved {piece_id_to_chinese_name[piece_id-1]}({piece_id}) to {coord}")
             self.board.move_piece(piece_id, coord)  # update board state
 
