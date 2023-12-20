@@ -49,14 +49,14 @@ class SelfPlayGame:
 
         while True:
             player_in_turn = players[current_player_id]
-            (piece_id, coord), move_probs = player_in_turn.get_action(board, current_player_id)  # player take action
+            piece_id, coord = player_in_turn.get_action(board, current_player_id)  # player take action
             board.move_piece(piece_id, coord)  # update board state
             game_finished, winner = board.game_finished()  # check game finished
             if game_finished:
                 players[0].reset_player()
                 players[1].reset_player()
                 break
-            self.cur_player_id = 1 - self.cur_player_id  # switch the player
+            current_player_id = 1 - current_player_id  # switch the player
             
 
 class TrainPipeline():
@@ -71,7 +71,7 @@ class TrainPipeline():
         self.learn_rate = 2e-3
         self.lr_multiplier = 1.0  # adaptively adjust the learning rate based on KL
         self.temp = 1.0  # the temperature param
-        self.n_simulations = 100  # num of simulations for each move
+        self.n_simulations = 200  # num of simulations for each move
         self.c_puct = 5
         self.buffer_size = 10000
         self.batch_size = 512  # mini-batch size for training
@@ -79,7 +79,7 @@ class TrainPipeline():
         self.play_batch_size = 1
         self.epochs = 5  # num of train_steps for each update
         self.kl_targ = 0.02
-        self.check_freq = 50
+        self.check_freq = 30
         self.game_batch_num = 100
         self.best_win_ratio = 0.0
         self.policy_value_net = PolicyValueNet(self.board_width, self.board_height, 
