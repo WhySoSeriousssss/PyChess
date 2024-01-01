@@ -65,4 +65,5 @@ class MenuUI(QWidget):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         file_name, _ = QFileDialog.getOpenFileName(self, "Open Replay File", "", "JSON Files(*.json)")
-        self.watch_replay_signal.emit(file_name)
+        if file_name:
+            self.watch_replay_signal.emit(file_name)

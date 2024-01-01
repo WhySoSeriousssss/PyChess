@@ -17,7 +17,7 @@ BOARD_OFFSET = (25, 25)
 BOARD_SPACING = (50, 50)
 
 
-class ChessPiece(QGraphicsPixmapItem):
+class ChessPieceItem(QGraphicsPixmapItem):
     def __init__(self, pixmap):
         super().__init__(pixmap)
         self.row = 0
@@ -41,14 +41,14 @@ class ChessboardScene(QGraphicsScene):
         self.chessboard_item = QGraphicsPixmapItem(chessboard_pixmap)
         self.addItem(self.chessboard_item)
         # init chess pieces
-        self.pieces = []
+        self.piece_items = []
         for piece_id in range(1, 33):
             piece_type = piece_id_to_type[piece_id - 1]
             piece_owner = piece_id_to_owner[piece_id - 1]
             piece_name = PIECES_FILE_NAMES[piece_owner * 7 + piece_type - 1]
             piece_pixmap = QPixmap(os.path.join(ASSET_PIECES_PATH, piece_name)).scaled(PIECE_SIZE[1], PIECE_SIZE[0], Qt.AspectRatioMode.KeepAspectRatio, Qt.SmoothTransformation)
-            piece_item = ChessPiece(piece_pixmap)
-            self.pieces.append(piece_item)
+            piece_item = ChessPieceItem(piece_pixmap)
+            self.piece_items.append(piece_item)
         # keeps a copy of the board state
         self.board_state = [
             [32, 31, 30, 29, 28, 27, 26, 25, 24],
@@ -61,23 +61,38 @@ class ChessboardScene(QGraphicsScene):
             [0, 6, 0, 0, 0, 0, 0, 7, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],
             [8, 9, 10, 11, 12, 13, 14, 15, 16]
-        ]  # init board state
+        ]  # initial board state
         # init the board UI
         for i in range(len(self.board_state)):
             for j in range(len(self.board_state[0])):
                 piece_id = self.board_state[i][j]
                 if piece_id == 0:
                     continue
-                piece_item = self.pieces[piece_id - 1]
+                piece_item = self.piece_items[piece_id - 1]
                 piece_item.set_coord((i, j))
                 self.addItem(piece_item)
+    
+    def set_board_state(self, board_state):
+        self.board_state = board_state
+        # set all piece items to invisible
+        for piece_item in self.piece_items:
+            piece_item.setVisible(False)
+        # update each piece item's position
+        for i in range(len(self.board_state)):
+            for j in range(len(self.board_state[0])):
+                piece_id = self.board_state[i][j]
+                if piece_id == 0:
+                    continue
+                piece_item = self.piece_items[piece_id - 1]
+                piece_item.set_coord((i, j))
+                piece_item.setVisible(True)
 
     def update_board_ui(self, piece_id, new_coord):
-        piece_to_move = self.pieces[piece_id - 1]
+        piece_to_move = self.piece_items[piece_id - 1]
         # kill the orignal piece at the new coord
         new_coord_piece_id = self.board_state[new_coord[0]][new_coord[1]]
         if new_coord_piece_id != 0:
-            self.pieces[new_coord_piece_id - 1].setVisible(False)
+            self.piece_items[new_coord_piece_id - 1].setVisible(False)
         # update the board state
         self.board_state[piece_to_move.row][piece_to_move.col] = 0
         self.board_state[new_coord[0]][new_coord[1]] = piece_id
