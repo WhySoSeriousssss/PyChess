@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
     def watch_replay(self, replay_file):
         print(f"opened {replay_file}")
         # init replay UI
-        self.replay_ui = ReplayUI()
+        self.replay_ui = ReplayUI(replay_file)
         self.setCentralWidget(self.replay_ui)
 
     def handle_self_player_finished(self, winner):
